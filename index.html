@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>La Lista del Llanto 😭</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.7/axios.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --azul:     #0EA5E9;
+      --sol:      #FACC15;
+      --rojo:     #EF4444;
+      --tinta:    #18181B;
+      --blanco:   #FAFAF8;
+      --gris:     #71717A;
+      --gris-claro: #E4E4E7;
+      --sombra:   rgba(14,165,233,0.15);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--blanco);
+      color: var(--tinta);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--tinta);
+      padding: 2.5rem 1.5rem 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 24px,
+        rgba(14,165,233,0.06) 24px,
+        rgba(14,165,233,0.06) 25px
+      );
+    }
+
+    .header-inner { position: relative; z-index: 1; }
+
+    .header-eyebrow {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--azul);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.4rem, 8vw, 5rem);
+      font-weight: 900;
+      color: var(--blanco);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    header h1 span {
+      color: var(--sol);
+    }
+
+    .header-sub {
+      margin-top: 0.75rem;
+      color: var(--gris);
+      font-size: 0.95rem;
+    }
+
+    .total-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 1.25rem;
+      background: var(--azul);
+      color: white;
+      padding: 0.35rem 1rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+
+    /* ── SECCIÓN TITLES ── */
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ── FORM ── */
+    .form-card {
+      background: white;
+      border: 2px solid var(--tinta);
+      border-radius: 1rem;
+      padding: 1.75rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 6px 6px 0 var(--tinta);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 520px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .form-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--gris);
+    }
+
+    input, textarea {
+      border: 1.5px solid var(--gris-claro);
+      border-radius: 0.5rem;
+      padding: 0.6rem 0.85rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      color: var(--tinta);
+      background: var(--blanco);
+      transition: border-color 0.15s;
+      outline: none;
+      width: 100%;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--azul);
+      box-shadow: 0 0 0 3px var(--sombra);
+    }
+
+    textarea { resize: vertical; min-height: 72px; }
+
+    .motivo-hint {
+      font-size: 0.75rem;
+      color: var(--gris);
+      margin-top: 0.2rem;
+    }
+
+    .btn-registrar {
+      width: 100%;
+      margin-top: 1.25rem;
+      background: var(--tinta);
+      color: white;
+      border: none;
+      border-radius: 0.6rem;
+      padding: 0.8rem 1.5rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-registrar:hover { background: #000; }
+    .btn-registrar:active { transform: scale(0.98); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      background: var(--tinta);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: transform 0.35s cubic-bezier(.34,1.56,.64,1);
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    .toast.visible { transform: translateX(-50%) translateY(0); }
+
+    /* ── RANKING ── */
+    .ranking-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .ranking-card {
+      border: 2px solid var(--tinta);
+      border-radius: 0.875rem;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      background: white;
+      position: relative;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .ranking-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 4px 4px 0 var(--tinta);
+    }
+
+    .ranking-card.pos-1 { background: var(--sol); border-color: var(--tinta); }
+    .ranking-card.pos-2 { background: #E4E4E7; }
+    .ranking-card.pos-3 { background: #FED7AA; }
+
+    .pos-label {
+      font-size: 1.5rem;
+      line-height: 1;
+      margin-bottom: 0.35rem;
+    }
+
+    .ranking-nombre {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      word-break: break-word;
+    }
+
+    .ranking-count {
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .ranking-label {
+      font-size: 0.72rem;
+      color: var(--gris);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--gris);
+      font-size: 0.95rem;
+      border: 2px dashed var(--gris-claro);
+      border-radius: 1rem;
+    }
+
+    /* ── TABLA ── */
+    .table-wrap {
+      border: 2px solid var(--tinta);
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead {
+      background: var(--tinta);
+      color: white;
+    }
+
+    th {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    td {
+      padding: 0.8rem 1rem;
+      border-top: 1px solid var(--gris-claro);
+      vertical-align: top;
+    }
+
+    tr:hover td { background: #F4F4F5; }
+
+    .td-fecha {
+      white-space: nowrap;
+      color: var(--gris);
+      font-size: 0.82rem;
+    }
+
+    .td-nombre {
+      font-weight: 600;
+    }
+
+    .motivo-tag {
+      display: inline-block;
+      background: var(--azul);
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      margin: 0.15rem 0.15rem 0.15rem 0;
+    }
+
+    .btn-borrar {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--gris);
+      font-size: 1rem;
+      padding: 0.2rem;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+
+    .btn-borrar:hover { color: var(--rojo); }
+
+    /* ── DROPS ANIMADOS ── */
+    @keyframes caer {
+      0%   { transform: translateY(-40px) scale(0.8); opacity: 0; }
+      60%  { transform: translateY(6px) scale(1.05); opacity: 1; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .drop-anim {
+      animation: caer 0.55s cubic-bezier(.34,1.56,.64,1) both;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <p class="header-eyebrow">Verano · Registro oficial</p>
+    <h1>La Lista del <span>Llanto</span> 😭</h1>
+    <p class="header-sub">Cada lágrima cuenta. Ninguna se olvida.</p>
+    <div class="total-badge">
+      <span>💧</span>
+      <span id="total-llantos">0</span>
+      <span>llantos registrados</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- FORM -->
+  <section class="form-card">
+    <h2 class="section-title">📝 Registrar llanto</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="inp-fecha">Fecha</label>
+        <input type="date" id="inp-fecha" />
+      </div>
+      <div class="form-group">
+        <label for="inp-nombre">Nombre</label>
+        <input type="text" id="inp-nombre" placeholder="¿Quién ha llorado?" />
+      </div>
+      <div class="form-group full">
+        <label for="inp-motivo">Motivo del llanto</label>
+        <textarea id="inp-motivo" placeholder="Describe el motivo... usa #hashtags para categorizar"></textarea>
+        <p class="motivo-hint">Tip: escribe #hashtags en el motivo para etiquetarlo (ej: #drama, #amor, #calor)</p>
+      </div>
+    </div>
+    <button class="btn-registrar" onclick="registrarLlanto()">😭 Registrar llanto</button>
+  </section>
+
+  <!-- RANKING -->
+  <section>
+    <h2 class="section-title">🏆 Ranking llorón</h2>
+    <div class="ranking-grid" id="ranking-grid">
+      <div class="empty-state">Aún no hay llantos registrados. ¡Alguien tiene que romper a llorar primero!</div>
+    </div>
+  </section>
+
+  <!-- HISTORIAL -->
+  <section>
+    <h2 class="section-title">📋 Historial de llantos</h2>
+    <div id="historial-wrap">
+      <div class="empty-state">El historial está vacío. De momento.</div>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── SUPABASE CONFIG ──
+  const SB_URL = 'https://aukwtuvwfbemfmioslkl.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1a3d0dXZ3ZmJlbWZtaW9zbGtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMDM1OTQsImV4cCI6MjA5NTc3OTU5NH0.V3ZeFIKnQM9w8O27WvHHU12m2cXkx36F0SsTfSn7d4s';
+  const HEADERS = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' };
+
+  async function sbGet() {
+    const r = await fetch(`${SB_URL}/rest/v1/llantos?select=*&order=fecha.desc,created_at.desc`, { headers: HEADERS });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+
+  async function sbInsert(row) {
+    const r = await fetch(`${SB_URL}/rest/v1/llantos`, {
+      method: 'POST',
+      headers: { ...HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify(row)
+    });
+    if (!r.ok) throw new Error(await r.text());
+  }
+
+  async function sbDelete(id) {
+    const r = await fetch(`${SB_URL}/rest/v1/llantos?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: HEADERS
+    });
+    if (!r.ok) throw new Error(await r.text());
+  }
+
+  // ── INIT ──
+  const hoy = new Date().toISOString().slice(0, 10);
+  document.getElementById('inp-fecha').value = hoy;
+  document.getElementById('inp-fecha').max = hoy;
+
+  cargarYRenderizar();
+
+  // ── CARGAR ──
+  async function cargarYRenderizar() {
+    setLoading(true);
+    try {
+      const data = await sbGet();
+      document.getElementById('total-llantos').textContent = data.length;
+      renderRanking(data);
+      renderHistorial(data);
+    } catch(e) {
+      toast('❌ Error cargando datos: ' + e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function setLoading(on) {
+    document.querySelector('.btn-registrar').disabled = on;
+  }
+
+  // ── REGISTRAR ──
+  async function registrarLlanto() {
+    const fecha  = document.getElementById('inp-fecha').value.trim();
+    const nombre = document.getElementById('inp-nombre').value.trim();
+    const motivo = document.getElementById('inp-motivo').value.trim();
+
+    if (!fecha)  return toast('⚠️ Indica la fecha del llanto');
+    if (!nombre) return toast('⚠️ Indica quién ha llorado');
+    if (!motivo) return toast('⚠️ Escribe el motivo del llanto');
+
+    const btn = document.querySelector('.btn-registrar');
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+
+    try {
+      await sbInsert({ fecha, nombre, motivo });
+      document.getElementById('inp-nombre').value = '';
+      document.getElementById('inp-motivo').value = '';
+      toast('😭 ¡Llanto registrado!');
+      await cargarYRenderizar();
+    } catch(e) {
+      toast('❌ Error al guardar: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '😭 Registrar llanto';
+    }
+  }
+
+  // ── BORRAR ──
+  async function borrar(id) {
+    if (!confirm('¿Eliminar este llanto del registro?')) return;
+    try {
+      await sbDelete(id);
+      toast('🗑️ Llanto eliminado');
+      await cargarYRenderizar();
+    } catch(e) {
+      toast('❌ Error al borrar: ' + e.message);
+    }
+  }
+
+  // ── RANKING ──
+  function renderRanking(data) {
+    const container = document.getElementById('ranking-grid');
+    if (!data.length) {
+      container.innerHTML = '<div class="empty-state">Aún no hay llantos registrados. ¡Alguien tiene que romper a llorar primero!</div>';
+      return;
+    }
+
+    const mapa = {};
+    data.forEach(e => {
+      const key = e.nombre.trim().toLowerCase();
+      if (!mapa[key]) mapa[key] = { nombre: e.nombre.trim(), count: 0 };
+      mapa[key].count++;
+    });
+
+    const ranking = Object.values(mapa).sort((a, b) => b.count - a.count);
+    const emojis   = ['🥇', '🥈', '🥉'];
+    const posClass = ['pos-1', 'pos-2', 'pos-3'];
+
+    container.innerHTML = ranking.map((p, i) => `
+      <div class="ranking-card ${posClass[i] || ''} drop-anim" style="animation-delay:${i * 0.07}s">
+        <div class="pos-label">${emojis[i] || `#${i + 1}`}</div>
+        <div class="ranking-nombre">${esc(p.nombre)}</div>
+        <div class="ranking-count">${p.count}</div>
+        <div class="ranking-label">${p.count === 1 ? 'llanto' : 'llantos'}</div>
+      </div>
+    `).join('');
+  }
+
+  // ── HISTORIAL ──
+  function renderHistorial(data) {
+    const wrap = document.getElementById('historial-wrap');
+    if (!data.length) {
+      wrap.innerHTML = '<div class="empty-state">El historial está vacío. De momento.</div>';
+      return;
+    }
+
+    const filas = data.map(e => `
+      <tr>
+        <td class="td-fecha">${formatFecha(e.fecha)}</td>
+        <td class="td-nombre">${esc(e.nombre)}</td>
+        <td>${formatMotivo(e.motivo)}</td>
+        <td><button class="btn-borrar" onclick="borrar('${e.id}')" title="Eliminar">✕</button></td>
+      </tr>
+    `).join('');
+
+    wrap.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Llorón/a</th>
+              <th>Motivo</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>${filas}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // ── HELPERS ──
+  function formatFecha(iso) {
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  function formatMotivo(texto) {
+    const parts = texto.split(/(#\w+)/g);
+    return parts.map(p =>
+      p.startsWith('#')
+        ? `<span class="motivo-tag">${esc(p)}</span>`
+        : esc(p)
+    ).join('');
+  }
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('visible');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('visible'), 2800);
+  }
+
+  document.getElementById('inp-nombre').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('inp-motivo').focus();
+  });
+</script>
+</body>
+</html>
